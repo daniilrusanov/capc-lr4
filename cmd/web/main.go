@@ -8,12 +8,9 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type Drug struct {
@@ -30,8 +27,8 @@ type TemplateData struct {
 	CurrentDate     string
 	FeedbackName    string
 	FeedbackMessage string
-	SuccessMessage  string // Виправляє помилку обірваної форми
-	IsAuthenticated bool   // Виправляє помилку статичної шапки
+	SuccessMessage  string
+	IsAuthenticated bool
 }
 
 var catalog = []Drug{
@@ -45,9 +42,7 @@ var catalog = []Drug{
 const authServiceURL = "http://localhost:8081"
 
 func main() {
-	_ = godotenv.Load()
-	_ = os.Getenv("JWT_SECRET")
-
+	// МІДЛВАР ДЛЯ ПЕРЕВІРКИ АВТОРИЗАЦІЇ
 	authMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie("access_token")
@@ -56,14 +51,20 @@ func main() {
 				return
 			}
 
-			// Перевірка через API
+			// Йдемо на бекенд перевіряти токен
 			req, _ := http.NewRequest("GET", authServiceURL+"/verify", nil)
 			req.Header.Set("Authorization", "Bearer "+cookie.Value)
 
 			client := &http.Client{Timeout: 5 * time.Second}
 			resp, err := client.Do(req)
 
-			if err != nil || resp.StatusCode != http.StatusOK {
+			if err != nil {
+				log.Println("Auth check failed (Connection Error):", err)
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+				return
+			}
+			if resp.StatusCode != http.StatusOK {
+				log.Println("Auth check failed (Backend returned status):", resp.StatusCode)
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
 				return
 			}
@@ -72,20 +73,18 @@ func main() {
 		}
 	}
 
+	// РЕЄСТРАЦІЯ
 	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			r.ParseForm()
-			email := r.FormValue("email")
-			password := r.FormValue("password")
-
 			reqBody, _ := json.Marshal(map[string]string{
-				"email":    email,
-				"password": password,
+				"email":    r.FormValue("email"),
+				"password": r.FormValue("password"),
 			})
 
 			resp, err := http.Post(authServiceURL+"/register", "application/json", bytes.NewBuffer(reqBody))
 			if err != nil || resp.StatusCode != http.StatusCreated {
-				render(w, r, "register.page.gohtml", TemplateData{FeedbackMessage: "Помилка реєстрації. Можливо, користувач вже існує."})
+				render(w, r, "register.page.gohtml", TemplateData{FeedbackMessage: "Помилка реєстрації. (Бекенд не підтримує або користувач існує)"}, http.StatusBadRequest)
 				return
 			}
 
@@ -95,20 +94,19 @@ func main() {
 		render(w, r, "register.page.gohtml", TemplateData{})
 	})
 
+	// ЛОГІН
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			r.ParseForm()
-			email := r.FormValue("email")
-			password := r.FormValue("password")
-
 			reqBody, _ := json.Marshal(map[string]string{
-				"email":    email,
-				"password": password,
+				"email":    r.FormValue("email"),
+				"password": r.FormValue("password"),
 			})
 
+			// Запит до бекенду
 			resp, err := http.Post(authServiceURL+"/login", "application/json", bytes.NewBuffer(reqBody))
 			if err != nil || resp.StatusCode != http.StatusOK {
-				render(w, r, "login.page.gohtml", TemplateData{FeedbackMessage: "Невірний email або пароль"})
+				render(w, r, "login.page.gohtml", TemplateData{FeedbackMessage: "Невірний email або пароль"}, http.StatusUnauthorized)
 				return
 			}
 
@@ -116,9 +114,15 @@ func main() {
 			bodyBytes, _ := io.ReadAll(resp.Body)
 			json.Unmarshal(bodyBytes, &apiResp)
 
+			// Підтримка обох форматів бекенду (старого і нового)
+			tokenVal := apiResp["access_token"]
+			if tokenVal == "" {
+				tokenVal = apiResp["token"]
+			}
+
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
-				Value:    apiResp["access_token"],
+				Value:    tokenVal,
 				Path:     "/",
 				HttpOnly: true,
 			})
@@ -129,11 +133,13 @@ func main() {
 		render(w, r, "login.page.gohtml", TemplateData{})
 	})
 
+	// ВИХІД
 	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{Name: "access_token", Value: "", MaxAge: -1, Path: "/"})
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	})
 
+	// ЗАХИЩЕНІ МАРШРУТИ
 	http.HandleFunc("/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
@@ -177,12 +183,9 @@ func main() {
 	http.HandleFunc("/feedback", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			r.ParseForm()
-			name := r.FormValue("name")
-			message := r.FormValue("message")
-
 			data := TemplateData{
-				FeedbackName:    name,
-				FeedbackMessage: message,
+				FeedbackName:    r.FormValue("name"),
+				FeedbackMessage: r.FormValue("message"),
 			}
 			render(w, r, "result.page.gohtml", data)
 			return
@@ -194,16 +197,11 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func render(w http.ResponseWriter, r *http.Request, t string, data TemplateData) {
+func render(w http.ResponseWriter, r *http.Request, t string, data TemplateData, status ...int) {
 	data.CurrentDate = time.Now().Format("02.01.2006 15:04:05")
 
-	// Автоматично перевіряємо, чи є кука, і ставимо прапорець IsAuthenticated
 	_, err := r.Cookie("access_token")
-	if err == nil {
-		data.IsAuthenticated = true
-	} else {
-		data.IsAuthenticated = false
-	}
+	data.IsAuthenticated = (err == nil)
 
 	files := []string{
 		"./cmd/web/templates/base.layout.gohtml",
@@ -216,5 +214,10 @@ func render(w http.ResponseWriter, r *http.Request, t string, data TemplateData)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	if len(status) > 0 {
+		w.WriteHeader(status[0])
+	}
+
 	_ = tmpl.ExecuteTemplate(w, "base.layout.gohtml", data)
 }
