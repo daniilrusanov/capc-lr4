@@ -1,0 +1,33 @@
+{{define "title"}}Вхід до системи{{end}}
+
+{{define "content"}}
+    <main style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white;">
+        <h2 style="text-align: center; color: #0277bd;">Авторизація</h2>
+
+        {{if .SuccessMessage}}
+            <p style="color: green; text-align: center; font-weight: bold; padding: 10px; background: #e8f5e9;">✅ {{.SuccessMessage}}</p>
+        {{end}}
+
+        {{if .FeedbackMessage}}
+            <p style="color: red; text-align: center; font-weight: bold;">❌ {{.FeedbackMessage}}</p>
+        {{end}}
+
+        <form method="POST" action="/login">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Email:</label>
+                <input type="email" name="email" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Пароль:</label>
+                <input type="password" name="password" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+            </div>
+            <button type="submit" style="width: 100%; background-color: #0277bd; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">
+                Увійти
+            </button>
+        </form>
+
+        <div style="margin-top: 15px; text-align: center;">
+            <a href="/register" style="color: #0277bd; text-decoration: none;">Немає акаунту? Створити</a>
+        </div>
+    </main>
+{{end}}

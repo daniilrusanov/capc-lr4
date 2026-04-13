@@ -1,11 +1,18 @@
 {{define "header"}}
-
     <header style="background-color: #0277bd; color: white; padding: 15px; text-align: center;">
         <h1 style="margin: 0;">🏥 Аптека "Здоров'я"</h1>
         <nav style="margin-top: 10px;">
-            <a href="/" style="color: white; margin: 0 10px;">Головна</a> |
-            <a href="/about" style="color: white; margin: 0 10px;">Про нас</a> |
-            <a href="/feedback" style="color: white; margin: 0 10px; font-weight: bold;">Написати нам (POST)</a>
+            {{if .IsAuthenticated}}
+                <!-- Меню для АВТОРИЗОВАНИХ користувачів -->
+                <a href="/" style="color: white; margin: 0 10px;">Головна</a> |
+                <a href="/about" style="color: white; margin: 0 10px;">Про нас</a> |
+                <a href="/feedback" style="color: white; margin: 0 10px;">Написати нам (POST)</a> |
+                <a href="/logout" style="color: #ffc107; margin: 0 10px; font-weight: bold;">Вихід 🚪</a>
+            {{else}}
+                <!-- Меню для НЕАВТОРИЗОВАНИХ користувачів -->
+                <a href="/login" style="color: white; margin: 0 10px;">Вхід</a> |
+                <a href="/register" style="color: white; margin: 0 10px;">Реєстрація</a>
+            {{end}}
         </nav>
     </header>
 {{end}}

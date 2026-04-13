@@ -1,11 +1,5 @@
 package main
 
-// Credentials описує дані, що приходять при логіні [cite: 508]
-type Credentials struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 // User описує користувача в системі [cite: 509]
 type User struct {
 	ID             int

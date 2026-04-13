@@ -1,0 +1,41 @@
+### Register a new user
+POST http://localhost:8081/register
+Content-Type: application/json
+
+{
+  "email": "student@example.com",
+  "password": "secret123"
+}
+
+###
+
+### Login with credentials
+POST http://localhost:8081/login
+Content-Type: application/json
+
+{
+  "email": "student@example.com",
+  "password": "secret123"
+}
+
+###
+
+### Refresh access token
+POST http://localhost:8081/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "your_refresh_token_here"
+}
+
+###
+
+### Verify access token
+POST http://localhost:8081/verify
+Content-Type: application/json
+
+{
+  "token": "your_access_token_here"
+}
+
+###
