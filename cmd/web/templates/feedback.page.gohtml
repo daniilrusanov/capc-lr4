@@ -1,0 +1,25 @@
+{{define "title"}}Зворотний зв'язок{{end}}
+
+{{define "content"}}
+
+    <main>
+        <h2>Залиште відгук про нашу аптеку</h2>
+        <form method="POST" action="/feedback">
+            <div style="margin-bottom: 10px;">
+                <label>Ваше ім'я:
+
+                    <input type="text" name="name" required style="width: 100%; padding: 8px;">
+                </label>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label>Повідомлення:
+
+                    <textarea name="message" required style="width: 100%; padding: 8px; height: 100px;"></textarea>
+                </label>
+            </div>
+            <button type="submit" class="btn">Надіслати відгук</button>
+        </form>
+
+        <a href="/">Повернутися до каталогу</a>
+    </main>
+{{end}}

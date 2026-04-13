@@ -1,0 +1,40 @@
+{{define "title"}}Каталог ліків{{end}}
+
+{{define "content"}}
+    <main>
+        <h2>Каталог препаратів</h2>
+
+        <!-- Форма пошуку (метод GET) -->
+        <form method="GET" action="/" style="margin-bottom: 20px;">
+            <input type="text" name="query" value="{{.SearchQuery}}" placeholder="Пошук ліків за назвою...">
+            <button type="submit">Знайти</button>
+            <a href="/">Скинути</a>
+        </form>
+
+        <!-- Список ліків -->
+        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; max-width: 600px;">
+            <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th>Назва</th>
+                <th>Виробник</th>
+                <th>Ціна</th>
+                <th>Дія</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{range .Drugs}}
+                <tr>
+                    <td><strong>{{.Name}}</strong></td>
+                    <td>{{.Manufacturer}}</td>
+                    <td>{{.Price}} грн</td>
+                    <td><a href="/drug/{{.ID}}">Деталі</a></td>
+                </tr>
+            {{else}}
+                <tr>
+                    <td colspan="4" style="text-align: center;">За вашим запитом ліків не знайдено.</td>
+                </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </main>
+{{end}}

@@ -1,0 +1,17 @@
+{{define "title"}}Результат{{end}}
+
+{{define "content"}}
+
+    <main>
+        <div style="background-color: #d4edda; color: #155724; padding: 20px; border-radius: 5px; border: 1px solid #c3e6cb;">
+            <h2>✅ Дані успішно отримано!</h2>
+            <p>Дякуємо за ваше звернення, <strong>{{.FeedbackName}}</strong>.</p>
+            <p>Ми отримали ваше повідомлення:</p>
+            <div style="background: white; padding: 10px; border-left: 5px solid #155724;">
+                "{{.FeedbackMessage}}"
+            </div>
+        </div>
+
+        <a href="/">&larr; На головну сторінку</a>
+    </main>
+{{end}}

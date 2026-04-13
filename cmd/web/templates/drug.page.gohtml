@@ -1,0 +1,22 @@
+{{define "title"}}Деталі: {{.Drug.Name}}{{end}}
+
+{{define "content"}}
+
+    <main>
+        <div style="margin-bottom: 20px;">
+            <a href="/">&larr; Повернутися до каталогу</a>
+        </div>
+
+        <div style="display: flex; gap: 30px; align-items: start;">
+            <div style="font-size: 80px; background: #f0f0f0; padding: 40px; border-radius: 15px;">💊</div>
+            <div>
+                <h2 style="color: #0277bd; margin-top: 0;">{{.Drug.Name}}</h2>
+                <p><strong>Виробник:</strong> {{.Drug.Manufacturer}}</p>
+                <p><strong>Код товару:</strong> SKU-{{.Drug.ID}}00</p>
+                <p style="font-size: 1.5em; color: #2e7d32; font-weight: bold;">Ціна: {{.Drug.Price}} грн</p>
+            </div>
+        </div>
+
+
+    </main>
+{{end}}
